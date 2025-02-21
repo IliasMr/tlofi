@@ -3,22 +3,22 @@ import json
 import sys
 import re
 from urllib.parse import urlparse
+import os
 
 # TODO: more error checking
 
+
+
 ascii_opening = """
-  _        __ _       _      
- | |      / _(_)     | |     
- | |     | |_ _  __ _| |__  
- | |     |  _| |/ _` | '_ \ 
- | |____ | | | | (_| | | | |
- |______||_| |_|\__, |_| |_|
-                 __/ |      
-                |___/       
-   🎶 Lofi Radio 🎶
+
+  __  .__          _____.__ 
+_/  |_|  |   _____/ ____\__|
+\   __\  |  /  _ \   __\|  |
+ |  | |  |_(  <_> )  |  |  |
+ |__| |____/\____/|__|  |__|
+
+ 🎶 Lofi Radio 🎶
 """
-
-
 
 # def read_streams():
 #     with open("streams.txt") as file:
@@ -29,6 +29,8 @@ ascii_opening = """
 GREEN = '\033[92m'  
 CYAN = '\033[36m'   
 RESET = '\033[0m'  # default
+
+
 
 class StreamManager:
     def __init__(self):
@@ -58,8 +60,17 @@ class StreamManager:
             if url not in self.streams:
                 self.streams.append(url)
                 print(f"{CYAN}>{len(self.streams)} in queue{RESET}")
+                # TODO: also get and save title
         else:
             print(f"{CYAN}>Invalid URL. Please provide a valid youtube link.{RESET}")
+
+
+def refresh_screen(current):
+    os.system("clear" if os.name == "posix" else "cls")  
+    print(ascii_opening)
+    print(f">{GREEN}♫ Now playing:{RESET} random ♫\n")
+
+
 
 
 def play(urlsManager, stream_id):
@@ -114,6 +125,7 @@ if __name__ == "__main__":
 
     try:
         while(True):
+
             key = input()
             args = key.split(maxsplit=1)
 
@@ -125,6 +137,7 @@ if __name__ == "__main__":
                 vlc.terminate()
                 break
             elif command.strip() == "skip":
+
                 vlc.terminate()
                 stream_id= (stream_id+1) % len(urlsManager.streams) 
                 vlc = play(urlsManager, stream_id)
