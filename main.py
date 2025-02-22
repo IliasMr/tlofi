@@ -8,7 +8,6 @@ import os
 # TODO: more error checking
 
 
-
 ascii_opening = """
 
   __  .__          _____.__ 
@@ -20,65 +19,64 @@ _/  |_|  |   _____/ ____\__|
  🎶 Lofi Radio 🎶
 """
 
-# def read_streams():
-#     with open("streams.txt") as file:
-#         streams = file.readlines()
-#     return streams
 
 # terminal colors
 GREEN = '\033[92m'  
 CYAN = '\033[36m'   
 RESET = '\033[0m'  # default
 
+# create temp folder if does not exist
+TEMP_DIR = os.path.join(os.path.dirname(__file__), "temp")
+os.makedirs(TEMP_DIR, exist_ok=True)  
+
+PID_FILE = os.path.join(TEMP_DIR, "pid.txt")  
+STREAMS_FILE = os.path.join(os.path.dirname(__file__), "media", "streams.txt") 
+CURRENT_FILE = os.path.join(TEMP_DIR, "current.txt")
 
 
-class StreamManager:
-    def __init__(self):
-        self.streams = [
-            "https://www.youtube.com/watch?v=jfKfPfyJRdk",
-            "https://www.youtube.com/watch?v=5yx6BWlEVcY",
-            "https://www.youtube.com/watch?v=Dx5qFachd3A"
-        ]
-    def list_streams(self, streamID):
-        print(f"{CYAN}>Queue{RESET}")
+def read_streams():
+    if not os.path.exists(STREAMS_FILE):
+        print ("No streams file found")
+        return []
+    with open(STREAMS_FILE, "r") as file:
+        return [line.strip() for line in file if line.strip()]
 
-        i=0
-        for url in self.streams:
-            title = subprocess.check_output(["yt-dlp", "-O", "title", url], text=True).strip()
-            title = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", "", title).strip()
-            if(streamID == i):
-                print(f"{GREEN}{title} || {url}{RESET}")
-            else:
-                print(f"{title} || {url}")
-            print(" ")
-            i+=1
+def list():
 
-    def add_stream(self,url):
-
-        parsedUrl = urlparse(url)
-        if parsedUrl.scheme in ['http', 'https'] and parsedUrl.netloc in ['youtube.com', 'www.youtube.com', 'youtu.be']:
-            if url not in self.streams:
-                self.streams.append(url)
-                print(f"{CYAN}>{len(self.streams)} in queue{RESET}")
-                # TODO: also get and save title
-        else:
-            print(f"{CYAN}>Invalid URL. Please provide a valid youtube link.{RESET}")
-
-
-def refresh_screen(current):
-    os.system("clear" if os.name == "posix" else "cls")  
-    print(ascii_opening)
-    print(f">{GREEN}♫ Now playing:{RESET} random ♫\n")
-
-
-
-
-def play(urlsManager, stream_id):
-    if urlsManager.streams[stream_id] is not None:
-        stream_url = urlsManager.streams[stream_id]
+    if os.path.exists(CURRENT_FILE):
+        with open(CURRENT_FILE, "r") as current:
+            id = current.read(1)
     else:
-        print("No stream in queue! Play a stream with play")
-        return None
+        print("No active playback found")
+        return
+    
+    currentID = int(id)
+
+    streams = read_streams()
+    if not streams:
+        print(f"{CYAN}> No streams available. Add one with 'tlofi add <url>'{RESET}")
+        return
+    
+    print(f"{CYAN}> Queue{RESET}")
+    for i, url in enumerate(streams):
+        title = subprocess.check_output(["yt-dlp", "-O", "title", url], text=True).strip()
+        title = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", "", title).strip()
+        if (i == currentID):
+            print(f"{GREEN}{i+1}. {title} || {url}{RESET}")    
+        else:
+            print(f"{i+1}. {title} || {url}")
+
+
+def play():
+    streams = read_streams()
+    if not streams:
+        print("No streams available! Add one with 'tlofi add <url>'")
+        return
+
+    with open(CURRENT_FILE, "r") as current:
+        id = current.read(1)
+
+    stream_url = streams[int(id)]
 
     # Get stream info 
     metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio", stream_url], text=True)
@@ -92,65 +90,89 @@ def play(urlsManager, stream_id):
         print("falied to get URL")
         return None
 
-    # FFMPEG
-    # subprocess.Popen(["ffplay", "-re", "-i", audio_url, "-vn", "-f", "pulse", "default"], 
-    #                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    # VLC 
     # use --intf dummy for playing in the background
     vlc_p = subprocess.Popen(["vlc", audio_url, "--intf", "dummy", "--play-and-exit"], 
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print(f">{GREEN}♫ Now playing:{RESET}{title} ♫")
 
-    return vlc_p
+    with open(PID_FILE, "w") as pid_file:
+        pid_file.write(str(vlc_p.pid))
+
 
 
 def help():
     print(f"{CYAN}>Commands{RESET}")
-    print("skip      -> skip to the next stream url in the txt file")
-    print("stop      -> stop playing and exit the program")
+    print("skip      -> skip to the next stream in queue")
+    print("stop      -> stop playing and exit")
     print("list      -> print the stream queue")
-    print("add <url> -> add new stream url to queue")
+    print("add <url> -> add new stream url to queue")       #TODO: to implement
 
 
+def stop():
+    if not os.path.exists(PID_FILE):
+        print("No active playback found")
+        return
+    
+    with open(PID_FILE, "r") as pid_file:
+        pid = pid_file.read().strip()
+
+    try:
+        os.kill(int(pid), 9) 
+        os.remove(PID_FILE)
+        os.remove(CURRENT_FILE)
+        print(f"{CYAN}> Stopped playback{RESET}")
+    
+    except ProcessLookupError:
+        print("No active VLC process found.")
+
+def skip():
+    if not os.path.exists(PID_FILE):
+        print("No active playback found")
+        return
+    
+    # terminate previous session
+    with open(PID_FILE, "r") as pid_file:
+        pid = pid_file.read().strip()
+    try:
+        os.kill(int(pid), 9) 
+    except ProcessLookupError:
+        print("No active VLC process found.")
+
+    if os.path.exists(CURRENT_FILE):
+        with open(CURRENT_FILE, "r") as current:
+            try:
+                stream_id = int(current.read().strip())
+            except ValueError:
+                stream_id = 0           # default to 0 if corrupted
+    else:
+        stream_id = 0  
+    stream_id = (stream_id + 1) % len(read_streams())
+
+    with open(CURRENT_FILE, "w") as current:
+        current.write(str(stream_id))
+
+    print(f"{CYAN}>Skipped to next stream.{RESET}")
+    play()
 
 if __name__ == "__main__":
 
-    print(ascii_opening)
 
-    urlsManager = StreamManager()
+    if len(sys.argv) == 1:
+        if os.path.exists(PID_FILE):
+            print("tlofi is already running")   
+            quit()
+        print(ascii_opening)
+        
+        # start from the 1st stream in the list
+        with open(CURRENT_FILE, "w") as current:
+            current.write("0")
 
-    stream_id = 0
-    vlc = play(urlsManager, stream_id)
-
-    try:
-        while(True):
-
-            key = input()
-            args = key.split(maxsplit=1)
-
-            if not args:
-                continue    # empty
-
-            command = args[0]
-            if command.strip() == "stop":
-                vlc.terminate()
-                break
-            elif command.strip() == "skip":
-
-                vlc.terminate()
-                stream_id= (stream_id+1) % len(urlsManager.streams) 
-                vlc = play(urlsManager, stream_id)
-            elif command.strip() == "help":
-                help()
-            elif command.strip() == "list":
-                urlsManager.list_streams(stream_id)
-            elif command == "add" and len(args) > 1:
-                url = args[1]
-                urlsManager.add_stream(url)
-            else:
-                print(">No such command..type <help> for available commands")
-                
-    except KeyboardInterrupt:
-        vlc.terminate()
-        sys.exit(0)
+        play()
+    elif sys.argv[1] == "stop":
+        stop()
+    elif sys.argv[1] == "help":
+        help()
+    elif sys.argv[1] == "list":
+        list()
+    elif sys.argv[1] == "skip":
+        skip()
