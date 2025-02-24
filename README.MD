@@ -5,8 +5,9 @@ A simple python script for playing **LoFi Girl** livestreams in the terminal.
 - ```tlofi``` for playing a random stream 
 - ```tlofi <title>``` for playing a specific stream
 - ```tlofi list``` for available streams 
-- ```tlofi skip``` for playing the next stream in the list
+- ```tlofi skip``` for playing the next stream
 - ```tlofi help``` for available commands 
+- ```tlofi info``` for info on the currently playing stream
 - ```tlofi stop``` for exiting
 
 ## Streams 
@@ -35,5 +36,3 @@ sudo ./setup.sh
 
 ```
 - setup.sh: installs vlc, yt-dlp and creates an alias for tlofi to start the script easily
-
-

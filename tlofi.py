@@ -2,27 +2,9 @@ import subprocess
 import json
 import sys
 import re
-from urllib.parse import urlparse
 import os
 from random import randrange
 
-# TODO: more error checking
-
-
-ascii_opening = """
-
-  __  .__          _____.__ 
-_/  |_|  |   _____/ ____\__|
-\   __\  |  /  _ \   __\|  |
- |  | |  |_(  <_> )  |  |  |
- |__| |____/\____/|__|  |__|
-
-
-"""
- ## 🎶 Lofi Radio 🎶
-
-
- 
 """List with the available streams.""" 
 
 streams = [
@@ -62,6 +44,20 @@ CURRENT_FILE = os.path.join(TEMP_DIR, "current.txt")
 #         return []
 #     with open(STREAMS_FILE, "r") as file:
 #         return [line.strip() for line in file if line.strip()]
+
+ascii_opening = """
+
+  __  .__          _____.__ 
+_/  |_|  |   _____/ ____\__|
+\   __\  |  /  _ \   __\|  |
+ |  | |  |_(  <_> )  |  |  |
+ |__| |____/\____/|__|  |__|
+
+
+"""
+
+## 🎶 Lofi Radio 🎶
+
 
 # list available streams
 def list_q():
@@ -118,7 +114,7 @@ def play():
 
 # help section
 def helpp():
-    print(f"{CYAN}>Commands{RESET}")
+    #print(f"{CYAN}>Commands{RESET}")
     print("tlofi            -> play a random stream from the list")
     print("tlofi <stream>   -> play a specific stream from the list.")
     print("tlofi skip       -> skip to the next stream in the list")
@@ -238,6 +234,9 @@ if __name__ == "__main__":
         "synth": 7,
         "relax": 8
     }
+    if len(sys.argv) > 2:
+        print("No such command. Run 'tlofi help' for usage")
+        exit()
 
     if len(sys.argv) == 1:
         
