@@ -1,0 +1,40 @@
+{
+    "streams": [
+      {
+        "type": "chill",
+        "url": "https://www.youtube.com/watch?v=HuFYqnbVbzY"
+      },
+      {
+        "type": "sad",
+        "url": "https://www.youtube.com/watch?v=P6Segk8cr-c"
+      },
+      {
+        "type": "study",
+        "url": "https://www.youtube.com/watch?v=1oDrJba2PSs"
+      },
+      {
+        "type": "sleep",
+        "url": "https://www.youtube.com/watch?v=28KRPhVzCus"
+      },
+      {
+        "type": "piano",
+        "url": "https://www.youtube.com/watch?v=TtkFsfOP9QI"
+      },
+      {
+        "type": "asian",
+        "url": "https://www.youtube.com/watch?v=Na0w3Mz46GA"
+      },
+      {
+        "type": "ambient",
+        "url": "https://www.youtube.com/watch?v=S_MOd40zlYU"
+      },
+      {
+        "type": "synth",
+        "url": "https://www.youtube.com/watch?v=4xDzrJKXOOY"
+      },
+      {
+        "type": "relax",
+        "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk"
+      }
+    ]
+}

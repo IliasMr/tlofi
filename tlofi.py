@@ -5,24 +5,6 @@ import re
 import os
 from random import randrange
 
-"""List with the available streams.""" 
-
-streams = [
-"https://www.youtube.com/watch?v=HuFYqnbVbzY",      # chill 
-"https://www.youtube.com/watch?v=P6Segk8cr-c",      # sad
-"https://www.youtube.com/watch?v=1oDrJba2PSs",      # study
-"https://www.youtube.com/watch?v=28KRPhVzCus",      # sleep
-"https://www.youtube.com/watch?v=TtkFsfOP9QI",      # piano 
-"https://www.youtube.com/watch?v=Na0w3Mz46GA",      # asian 
-"https://www.youtube.com/watch?v=S_MOd40zlYU",      # ambient 
-"https://www.youtube.com/watch?v=4xDzrJKXOOY",      # synth
-"https://www.youtube.com/watch?v=jfKfPfyJRdk"       # relax
-]
-
-
-"""Each type corresponds to the respective stream by index."""
-streamTypes = ["chill", "sad", "study", "sleep", "piano", "asian", "ambient", "synth", "relax"]
-
 
 # terminal colors
 GREEN = '\033[92m'  
@@ -35,15 +17,38 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 
 PID_FILE = os.path.join(TEMP_DIR, "pid.txt")  
 CURRENT_FILE = os.path.join(TEMP_DIR, "current.txt")
-#STREAMS_FILE = os.path.join(os.path.dirname(__file__), "media", "streams.txt") 
+STREAMS_FILE = os.path.join(os.path.dirname(__file__), "media", "streams.json") 
 
 
-# def read_streams():
-#     if not os.path.exists(STREAMS_FILE):
-#         print ("No streams file found")
-#         return []
-#     with open(STREAMS_FILE, "r") as file:
-#         return [line.strip() for line in file if line.strip()]
+def load_streams():
+    if not os.path.exists(STREAMS_FILE):
+        print("Streams JSON file not found.")
+        return [], []
+
+    with open(STREAMS_FILE, "r") as file:
+        data = json.load(file)
+
+    try: 
+        streams = [entry["url"] for entry in data["streams"]]
+        streamTypes = [entry["type"] for entry in data["streams"]]
+
+        if None in streams or None in streamTypes:
+            raise ValueError("Some entries in 'streams.json' are missing 'url' or 'type' keys. Update JSON and run again")
+
+    except (KeyError, TypeError) as e:
+        print(f"Error: Invalid JSON format - {e}")
+        streams = []
+        streamTypes = []
+        quit()
+
+
+    return streams, streamTypes
+
+streams, streamTypes = load_streams()
+if len(streams) != len(streamTypes):
+    print("Missing stream type or streams. Pls update JSON so that every stream has a type")
+    quit()
+
 
 ascii_opening = """
 
@@ -75,12 +80,12 @@ def list_q():
         #title = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", "", title).strip()
         if running == True:
             if (i == currentID):
-                print(f"{GREEN}{i+1}. {title.ljust(7)} || {url.ljust(7)}{RESET}")    
+                print(f"{GREEN}{i+1}. {title.ljust(10)} ||{' '*5}{url}{RESET}")    
 
             else:
-                print(f"{i+1}. {title.ljust(7)} || {url.ljust(7)}")
+                print(f"{i+1}. {title.ljust(10)} ||{' '*5} {url}")
         else:
-            print(f"{i+1}. {title.ljust(7)} || {url.ljust(7)}")
+            print(f"{i+1}. {title.ljust(10)} ||{' '*5} {url}")
 
 
 # start playing lofi
@@ -91,16 +96,23 @@ def play():
 
     stream_url = streams[int(id)]
 
-    # Get stream info 
-    metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio", stream_url], text=True)
-    stream_info = json.loads(metadata)
+    # Get stream info
+    try:  
+        metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio", stream_url], text=True)
+        stream_info = json.loads(metadata)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: yt-dlp failed to fetch stream info.")
+        return
+    except json.JSONDecodeError:
+        print("Error: invalid JSON data. The stream may be unavailable.")
+        return
     
     title = stream_info.get("title", "Unknown Title")
     title = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", "", title).strip()
 
     audio_url = stream_info.get("url", None)
     if not audio_url:
-        print("Failed to get URL. Please select a different stream")
+        print("Failed to get URL. Please replace the stream or select a different one")
         return None
 
     # use --intf dummy for playing in the background
@@ -115,12 +127,12 @@ def play():
 # help section
 def helpp():
     #print(f"{CYAN}>Commands{RESET}")
-    print("tlofi            -> play a random stream from the list")
-    print("tlofi <stream>   -> play a specific stream from the list.")
-    print("tlofi skip       -> skip to the next stream in the list")
-    print("tlofi stop       -> stop playing and exit")
-    print("tlofi list       -> list the available streams")
-    print("tlofi info       -> get info for the current stream")
+    print(f"{CYAN}tlofi{RESET}            -> play a random stream from the list")
+    print(f"{CYAN}tlofi <stream>{RESET}   -> play a specific stream from the list.")
+    print(f"{CYAN}tlofi skip{RESET}       -> skip to the next stream in the list")
+    print(f"{CYAN}tlofi stop{RESET}       -> stop playing and exit")
+    print(f"{CYAN}tlofi list{RESET}       -> list the available streams")
+    print(f"{CYAN}tlofi info{RESET}       -> get info for the current stream")
 
 
 # stop session and exit
@@ -223,17 +235,9 @@ def info():
 
 if __name__ == "__main__":
 
-    streams_map = {
-        "chill": 0,
-        "sad": 1,
-        "study": 2,
-        "sleep": 3,
-        "piano": 4,
-        "asian": 5,
-        "ambient": 6,
-        "synth": 7,
-        "relax": 8
-    }
+    # create streams map from streamTypes
+    streams_map = {stream: idx for idx, stream in enumerate(streamTypes)}
+    
     if len(sys.argv) > 2:
         print("No such command. Run 'tlofi help' for usage")
         exit()
@@ -245,7 +249,7 @@ if __name__ == "__main__":
             stop_previous_session()
 
         print(ascii_opening)
-        randomID = randrange(9)
+        randomID = randrange(len(streams))
         with open(CURRENT_FILE, "w") as current:
             current.write(str(randomID))
         play()

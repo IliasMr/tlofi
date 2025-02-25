@@ -12,7 +12,7 @@ else
     echo "VLC is already installed."
 fi
 
-# Install yt-dlp if it's not installed
+# install yt-dlp 
 if ! command_exists yt-dlp; then
     echo "Installing yt-dlp..."
     python3 -m pip install --upgrade yt-dlp
@@ -28,7 +28,7 @@ ALIAS_NAME="tlofi"
 if ! grep -q "alias $ALIAS_NAME=" ~/.bashrc; then
     echo "Creating alias for tlofi..."
     echo "alias $ALIAS_NAME='python3 $SCRIPT_DIR/tlofi.py'" >> ~/.bashrc
-    echo "Alias created. Restart your terminal or run 'source ~/.bashrc' to use it."
+    echo "Done. Restart your terminal or run 'source ~/.bashrc' to use it."
 fi
 
-echo "Setup complete!"
+echo "Setup complete."
