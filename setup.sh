@@ -4,7 +4,7 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# install vlc and yt-dlp
+# install vlc
 if ! command_exists vlc; then
     echo "Installing VLC..."
     apt update && apt install -y vlc
@@ -20,7 +20,6 @@ else
     echo "yt-dlp is already installed."
 fi
 
-# path for the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ALIAS_NAME="tlofi"
 

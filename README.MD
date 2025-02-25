@@ -27,7 +27,7 @@ All streams are from [LoFi](https://www.youtube.com/@LofiGirl) Girl channel.<br>
 ### Streams Management 
 Streams can be added/replaced from the JSON file in media dir.<br>
 For every stream a respective "type" keyword must be added.<br>
-Then it can be played with ```tlofi 'type'``` 
+Then it can be played with ```tlofi <title>``` 
 
 
 ## How to run 
