@@ -32,13 +32,9 @@ Then it can be played with ```tlofi <title>```
 
 ## How to run 
 ```
-curl -L https://github.com/IliasMr/tlofi -o temp.zip
-unzip temp.zip
-rm temp.zip
-
+git clone https://github.com/IliasMr/tlofi.git
 cd tlofi
 chmod +x setup.sh
 sudo ./setup.sh
-
 ```
 - setup.sh: installs vlc, yt-dlp and creates an alias for tlofi to start the script easily

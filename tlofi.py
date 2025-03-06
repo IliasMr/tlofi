@@ -50,7 +50,7 @@ if len(streams) != len(streamTypes):
     quit()
 
 
-ascii_opening = """
+ascii_opening = r"""
 
   __  .__          _____.__ 
 _/  |_|  |   _____/ ____\__|
@@ -98,7 +98,8 @@ def play():
 
     # Get stream info
     try:  
-        metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio", stream_url], text=True)
+        metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio/best", stream_url], text=True)
+        #metadata = subprocess.check_output(["yt-dlp", "-j", stream_url], text=True)
         stream_info = json.loads(metadata)
     except subprocess.CalledProcessError as e:
         print(f"Error: yt-dlp failed to fetch stream info.")
