@@ -5,6 +5,7 @@ import re
 import os
 from random import randrange
 
+#TODO: temp stays when shutting down pc while open
 
 # terminal colors
 GREEN = '\033[92m'  
@@ -117,8 +118,11 @@ def play():
         return None
 
     # use --intf dummy for playing in the background
-    vlc_p = subprocess.Popen(["vlc", audio_url, "--intf", "dummy", "--play-and-exit"], 
+    #vlc_p = subprocess.Popen(["vlc", audio_url, "--intf", "dummy", "--play-and-exit"], 
+                     #stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    vlc_p = subprocess.Popen(["vlc", audio_url, "--intf", "dummy", "--no-video", "--play-and-exit"], 
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     print(f">{GREEN}♫ Now playing:{RESET}{title} ♫")
 
     with open(PID_FILE, "w") as pid_file:
@@ -139,7 +143,7 @@ def helpp():
 # stop session and exit
 def stop():
     if not os.path.exists(PID_FILE):
-        print("No active playback found")
+        print(f"{CYAN}>No active playback found{RESET}")
         return
     
     with open(PID_FILE, "r") as pid_file:
@@ -152,12 +156,12 @@ def stop():
         print(f"{CYAN}> Stopped playback{RESET}")
     
     except ProcessLookupError:
-        print("No active VLC process found.")
+        print(f"{CYAN}> No active VLC process found.{RESET}")
 
 # skip to the next stream
 def skip():
     if not os.path.exists(PID_FILE):
-        print("No active playback found")
+        print(f"{CYAN}> No active playback found.{RESET}")
         return
     
     # terminate previous session
@@ -166,7 +170,7 @@ def skip():
     try:
         os.kill(int(pid), 9) 
     except ProcessLookupError:
-        print("No active VLC process found.")
+        print(f"{CYAN}> No active VLC process found.{RESET}")
 
     if os.path.exists(CURRENT_FILE):
         with open(CURRENT_FILE, "r") as current:
@@ -181,7 +185,7 @@ def skip():
     with open(CURRENT_FILE, "w") as current:
         current.write(str(stream_id))
 
-    print(f"{CYAN}>Skipped to next stream.{RESET}")
+    print(f"{CYAN}> Skipped to next stream.{RESET}")
     play()
 
 # helper to stop the previous session 
@@ -197,7 +201,7 @@ def stop_previous_session():
 # displays info for current playing stream
 def info():
     if not os.path.exists(CURRENT_FILE):
-        print("No stream is currently playing.")
+        print(f"{CYAN}No stream is currently playing.{RESET}")
         return
 
     with open(CURRENT_FILE, "r") as current:
@@ -210,7 +214,7 @@ def info():
     stream_url = streams[int(id)]
     
     try:
-        metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio", stream_url], text=True)
+        metadata = subprocess.check_output(["yt-dlp", "-j", "-f", "bestaudio/best", stream_url], text=True)
         stream_info = json.loads(metadata)
     except Exception as e:
         print(f"Error fetching stream info: {e}")

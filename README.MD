@@ -37,4 +37,4 @@ cd tlofi
 chmod +x setup.sh
 sudo ./setup.sh
 ```
-- setup.sh: installs vlc, yt-dlp and creates an alias for tlofi to start the script easily
+- setup.sh: installs vlc, yt-dlp and creates an alias for tlofi to start the script easily (for debian)
